@@ -32,12 +32,12 @@ const Page = () => {
     <>
       <Header title="記録一覧" userName="木村 健一医師" />
       <main className="min-h-screen bg-[#F9F9FA] px-6 py-4 space-y-4">
-        <h2 className="text-base font-semibold text-gray-800">記録確認・編集</h2>
+        <h2 className="text-[20px] font-semibold text-gray-800">記録確認・編集</h2>
         <HistoryViewer {...patientInfo} />
         <RecordEditor {...recordData} />
         
         <div className="bg-white rounded-2xl shadow p-4 space-y-3">
-          <h3 className="text-base font-semibold text-gray-800">編集履歴</h3>
+          <h3 className="text-[25px] font-semibold text-gray-800">編集履歴</h3>
           
           <ul className="divide-y divide-gray-200">
             <li className="grid grid-cols-[20%_1fr_auto] items-center py-2">

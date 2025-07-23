@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { User } from 'lucide-react';
 
 type HistoryViewerProps = {
   patientName: string;
@@ -22,7 +23,9 @@ const HistoryViewer: React.FC<HistoryViewerProps> = ({
 }) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow text-sm text-gray-800 space-y-2">
-      <h3 className="text-base font-semibold mb-2">患者情報</h3>
+      <h3 className="text-[25px] font-semibold mb-2 flex items-center gap-2">
+        <User className="w-5 h-5 text-[#3171CE]" />
+        患者情報</h3>
         <div className="grid grid-cols-7 gap-x-4 gap-y-2 text-sm">
             <InfoBlock label="患者名" value="佐藤 百合" />
             <InfoBlock label="患者ID" value="P002" />
@@ -44,7 +47,7 @@ const HistoryViewer: React.FC<HistoryViewerProps> = ({
 const InfoBlock = ({ label, value }: { label: string; value: string }) => (
   <div className="flex flex-col">
     <p className="text-[#3171CE]">{label}</p>
-    <p className="font-semibold">{value}</p>
+    <p className="text-[20px] font-semibold">{value}</p>
   </div>
 );
 
