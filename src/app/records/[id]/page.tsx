@@ -1,31 +1,82 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Header from '@/components/records/Header';
 import HistoryViewer from '@/components/records/HistoryViewer';
 import RecordEditor from '@/components/records/RecordEditor';
 
+type EditHistory = {
+  history_id: number;
+  edit_type: string;
+  description: string;
+  user_name: string;
+  created_at: string;
+};
+
+type RecordResponse = {
+  record_id: number;
+  patient: {
+    patient_code: string;
+    name: string;
+    age: number;
+    room_number: string;
+  };
+  record_type: string;
+  status: string;
+  summary_text: string;
+  character_count: number;
+  duration_seconds: number;
+  is_transferred_to_ehr: boolean;
+  created_at: string;
+  updated_at: string;
+  edit_histories: EditHistory[];
+};
+
 const Page = () => {
-  // 将来的にはここで API や DB からデータ取得する想定
+  const [data, setData] = useState<RecordResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const recordId = 1; // ← 将来的にはURLパラメータから取得可能
+
+  useEffect(() => {
+    const fetchRecord = async () => {
+      try {
+        const res = await fetch(
+          `https://b2ba7e421g.execute-api.ap-southeast-2.amazonaws.com/v1/records/${recordId}`
+        );
+        const json = await res.json();
+        setData(json.data);
+      } catch (err) {
+        console.error('データ取得エラー:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecord();
+  }, []);
+
+  if (loading) return <div className="p-4">読み込み中...</div>;
+  if (!data) return <div className="p-4">データが取得できませんでした</div>;
+
   const patientInfo = {
-    patientName: '佐藤 百合',
-    patientId: 'P002',
-    age: 62,
-    department: '外科',
-    room: '301号室',
-    recordedAt: '2025-07-01 18:43',
-    recordType: '音声記録',
+    patientName: data.patient.name,
+    patientId: data.patient.patient_code,
+    age: data.patient.age,
+    department: '外科', // APIにないので仮置き
+    room: data.patient.room_number,
+    recordedAt: data.created_at.replace('T', ' ').slice(0, 16),
+    recordType: data.record_type === 'ic_record' ? '音声記録' : data.record_type,
+  };
+
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}分${s}秒`;
   };
 
   const recordData = {
-    summary: `今回の膵臓の手術についてです。膵臓に石がたまって痛いので、手術で取り除きます。
-手術の方法は主に２つ：
-・腹腔鏡（ふくくうきょう）手術：お腹に小さな穴をいくつか開けて、カメラを見ながら手術をします。
-・良い点：小さくすみ、痛みが少なめ、回復も早いです。
-・悪い点：まれに合併症が出たり、状況により手術を中止する可能性があります。また、まれにお腹を大きく開ける手術に切り替わることもあります。
-
-・開腹手術（かいふくしゅじゅつ）：お腹を少し大きく開けて手術します。
-
-・麻酔は全身麻酔で行います。手術時間はだいたい1〜2時間くらい、入院は腹腔鏡なら3〜4日、開腹なら1週間くらいが目安です。
-・麻酔は安全ですが、手術中は痛みを感じません。ただし、麻酔でもまれにアレルギーや肺炎などのリスクがあります。`,
-    duration: '13分30秒',
+    summary: data.summary_text,
+    duration: formatDuration(data.duration_seconds),
   };
 
   return (
@@ -35,21 +86,19 @@ const Page = () => {
         <h2 className="text-[20px] font-semibold text-gray-800">記録確認・編集</h2>
         <HistoryViewer {...patientInfo} />
         <RecordEditor {...recordData} />
-        
+
         <div className="bg-white rounded-2xl shadow p-4 space-y-3">
           <h3 className="text-[25px] font-semibold text-gray-800">編集履歴</h3>
-          
           <ul className="divide-y divide-gray-200">
-            <li className="grid grid-cols-[20%_1fr_auto] items-center py-2">
-              <p>初回作成</p>
-              <p>音声認識により自動生成</p>
-              <p className="text-right">2025-07-01 19:01</p>
-            </li>
-            <li className="grid grid-cols-[20%_1fr_auto] items-center py-2">
-              <p>現在編集中</p>
-              <p>木村医師による編集</p>
-              <p className="text-right">進行中</p>
-            </li>
+            {data.edit_histories.map((history) => (
+              <li key={history.history_id} className="grid grid-cols-[20%_1fr_auto] items-center py-2">
+                <p>{history.edit_type === 'create' ? '初回作成' : '編集'}</p>
+                <p>{history.description}</p>
+                <p className="text-right">
+                  {history.created_at.replace('T', ' ').slice(0, 16)}
+                </p>
+              </li>
+            ))}
           </ul>
         </div>
       </main>
